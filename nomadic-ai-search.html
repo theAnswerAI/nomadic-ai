@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Nomadic AI — Your Travel Concierge</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F0E8;
+    --cream-dark: #EDE7D9;
+    --cream-deep: #E4DBCA;
+    --sand: #C9B99A;
+    --sand-dark: #A8936F;
+    --bark: #6B5744;
+    --bark-light: #8C7260;
+    --sage: #7A8C78;
+    --sage-light: #A3B5A0;
+    --sage-pale: #E8EDE7;
+    --charcoal: #2C2420;
+    --charcoal-mid: #4A3F38;
+    --muted: #9A8E85;
+    --white: #FDFAF5;
+    --gold: #C4A35A;
+    --gold-light: #D4B870;
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --radius-xl: 32px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--charcoal);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* Grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 56px 24px 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .logo {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .logo-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--charcoal);
+  }
+
+  .logo-tag {
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--cream-deep);
+    border: 1.5px solid var(--sand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--bark);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .avatar:active { transform: scale(0.94); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 8px 24px 28px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.1s forwards;
+  }
+
+  .hero-greeting {
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--charcoal);
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--bark);
+  }
+
+  /* ── SEARCH CARD ── */
+  .search-card {
+    margin: 0 16px;
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--cream-deep);
+    overflow: hidden;
+    box-shadow: 0 4px 32px rgba(44,36,32,0.07), 0 1px 4px rgba(44,36,32,0.04);
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.2s forwards;
+    flex: 1;
+    margin-bottom: 16px;
+  }
+
+  /* ── DESTINATION ── */
+  .dest-section {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+
+  .field-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .dest-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dest-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--sage-pale);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .dest-icon svg { color: var(--sage); }
+
+  .dest-input {
+    flex: 1;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--charcoal);
+    background: none;
+    border: none;
+    outline: none;
+    width: 100%;
+  }
+
+  .dest-input::placeholder {
+    color: var(--sand);
+    font-style: italic;
+  }
+
+  /* ── DATE ROW ── */
+  .dates-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+
+  .date-cell {
+    padding: 16px 24px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+
+  .date-cell:first-child {
+    border-right: 1px solid var(--cream-dark);
+  }
+
+  .date-cell:active { background: var(--cream); }
+
+  .date-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--charcoal);
+    margin-top: 4px;
+  }
+
+  .date-value.empty {
+    color: var(--sand);
+    font-style: italic;
+  }
+
+  /* ── ROOMS & GUESTS ── */
+  .rooms-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+
+  .rooms-cell {
+    padding: 16px 24px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .rooms-cell:first-child {
+    border-right: 1px solid var(--cream-dark);
+  }
+
+  .rooms-cell:active { background: var(--cream); }
+
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+
+  .stepper-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--sand);
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bark);
+    font-size: 16px;
+    font-weight: 300;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+
+  .stepper-btn:active { background: var(--cream-dark); transform: scale(0.92); }
+
+  .stepper-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--charcoal);
+    min-width: 20px;
+    text-align: center;
+  }
+
+  /* ── ROOM TYPE ── */
+  .room-type-section {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+
+  .pill-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-top: 8px;
+    padding-bottom: 4px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .pill-scroll::-webkit-scrollbar { display: none; }
+
+  .pill {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--cream-deep);
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--charcoal-mid);
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+
+  .pill.active {
+    background: var(--charcoal);
+    border-color: var(--charcoal);
+    color: var(--cream);
+  }
+
+  .pill:not(.active):active {
+    background: var(--cream-dark);
+  }
+
+  /* ── BUDGET ── */
+  .budget-section {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+
+  .budget-display {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin: 10px 0 14px;
+  }
+
+  .budget-currency {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .budget-amount {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--charcoal);
+  }
+
+  .budget-per {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .slider-wrap {
+    position: relative;
+    height: 24px;
+    display: flex;
+    align-items: center;
+  }
+
+  .slider-track {
+    position: absolute;
+    left: 0; right: 0;
+    height: 3px;
+    background: var(--cream-deep);
+    border-radius: 2px;
+  }
+
+  .slider-fill {
+    position: absolute;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--sand-dark), var(--gold));
+    border-radius: 2px;
+    transition: width 0.05s;
+  }
+
+  input[type=range].budget-range {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    height: 24px;
+    cursor: pointer;
+  }
+
+  input[type=range].budget-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--white);
+    border: 2px solid var(--sand-dark);
+    box-shadow: 0 2px 8px rgba(44,36,32,0.15);
+    transition: transform 0.15s, border-color 0.15s;
+  }
+
+  input[type=range].budget-range:active::-webkit-slider-thumb {
+    transform: scale(1.2);
+    border-color: var(--gold);
+  }
+
+  /* ── HOTEL TYPE & BRAND ── */
+  .hotel-section {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+
+  .brand-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    background: var(--cream);
+    border: 1px solid var(--cream-deep);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+  }
+
+  .brand-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--charcoal);
+    font-weight: 300;
+  }
+
+  .brand-input::placeholder { color: var(--sand); }
+
+  .optional-tag {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sage);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  /* ── SEARCH BUTTON ── */
+  .search-btn-wrap {
+    padding: 20px 24px 24px;
+  }
+
+  .search-btn {
+    width: 100%;
+    padding: 18px 24px;
+    border-radius: var(--radius-lg);
+    background: var(--charcoal);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--cream);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .search-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(196,163,90,0.15) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .search-btn:active {
+    transform: scale(0.98);
+  }
+
+  .search-btn:active::before {
+    opacity: 1;
+  }
+
+  .btn-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── DATE PICKER MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(44,36,32,0.5);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal-sheet {
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding: 12px 24px 40px;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+  }
+
+  .modal-overlay.open .modal-sheet {
+    transform: translateY(0);
+  }
+
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--cream-deep);
+    margin: 0 auto 20px;
+  }
+
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--charcoal);
+    margin-bottom: 20px;
+  }
+
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+  }
+
+  .cal-day-name {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 6px 0;
+  }
+
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--charcoal);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+
+  .cal-day:empty { cursor: default; }
+  .cal-day.other { color: var(--sand); }
+  .cal-day.today { border-color: var(--sand); font-weight: 500; }
+  .cal-day.selected { background: var(--charcoal); color: var(--cream); }
+  .cal-day.in-range { background: var(--cream-dark); }
+  .cal-day.range-start, .cal-day.range-end { background: var(--charcoal); color: var(--cream); }
+  .cal-day:not(:empty):active { background: var(--cream-deep); }
+
+  .cal-month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .cal-month-nav span {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 400;
+  }
+
+  .cal-nav-btn {
+    background: none;
+    border: 1px solid var(--cream-deep);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bark);
+    transition: background 0.15s;
+  }
+  .cal-nav-btn:active { background: var(--cream-dark); }
+
+  .modal-confirm {
+    width: 100%;
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: var(--radius-md);
+    background: var(--charcoal);
+    border: none;
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .modal-confirm:active { opacity: 0.85; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── LOADING STATE ── */
+  .search-btn.loading {
+    pointer-events: none;
+  }
+
+  .search-btn.loading .btn-text { opacity: 0; }
+
+  .search-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: var(--cream);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Bottom safe area */
+  .safe-bottom { height: env(safe-area-inset-bottom, 0px); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo">
+      <span class="logo-name">Nomadic AI</span>
+      <span class="logo-tag">Your travel concierge</span>
+    </div>
+    <div class="avatar" onclick="window.location.href='#member'">J</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <p class="hero-greeting">Good evening</p>
+    <h1 class="hero-title">Where shall we<br>send you <em>next?</em></h1>
+  </div>
+
+  <!-- SEARCH CARD -->
+  <div class="search-card">
+
+    <!-- DESTINATION -->
+    <div class="dest-section">
+      <div class="field-label">Destination</div>
+      <div class="dest-input-wrap">
+        <div class="dest-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+            <circle cx="12" cy="9" r="2.5"/>
+          </svg>
+        </div>
+        <input class="dest-input" type="text" placeholder="City or hotel name" id="destInput" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+
+    <!-- DATES -->
+    <div class="dates-row">
+      <div class="date-cell" onclick="openDatePicker('check-in')">
+        <div class="field-label">Check-in</div>
+        <div class="date-value empty" id="checkinDisplay">Add date</div>
+      </div>
+      <div class="date-cell" onclick="openDatePicker('check-out')">
+        <div class="field-label">Check-out</div>
+        <div class="date-value empty" id="checkoutDisplay">Add date</div>
+      </div>
+    </div>
+
+    <!-- ROOMS & GUESTS -->
+    <div class="rooms-row">
+      <div class="rooms-cell">
+        <div class="field-label">Rooms</div>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="step('rooms',-1)">−</button>
+          <span class="stepper-val" id="roomsVal">1</span>
+          <button class="stepper-btn" onclick="step('rooms',1)">+</button>
+        </div>
+      </div>
+      <div class="rooms-cell">
+        <div class="field-label">Guests</div>
+        <div class="stepper">
+          <button class="stepper-btn" onclick="step('guests',-1)">−</button>
+          <span class="stepper-val" id="guestsVal">2</span>
+          <button class="stepper-btn" onclick="step('guests',1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOM TYPE -->
+    <div class="room-type-section">
+      <div class="field-label">Room type</div>
+      <div class="pill-scroll" id="roomTypePills">
+        <button class="pill active" onclick="selectPill(this,'roomType')">Any</button>
+        <button class="pill" onclick="selectPill(this,'roomType')">Standard</button>
+        <button class="pill" onclick="selectPill(this,'roomType')">Deluxe</button>
+        <button class="pill" onclick="selectPill(this,'roomType')">Suite</button>
+        <button class="pill" onclick="selectPill(this,'roomType')">Junior Suite</button>
+        <button class="pill" onclick="selectPill(this,'roomType')">Penthouse</button>
+      </div>
+    </div>
+
+    <!-- BUDGET -->
+    <div class="budget-section">
+      <div class="field-label">Nightly budget</div>
+      <div class="budget-display">
+        <span class="budget-currency">$</span>
+        <span class="budget-amount" id="budgetAmt">350</span>
+        <span class="budget-per">/ night</span>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-track"></div>
+        <div class="slider-fill" id="sliderFill" style="width:35%"></div>
+        <input type="range" class="budget-range" id="budgetRange" min="50" max="1000" value="350" step="10" oninput="updateBudget(this.value)">
+      </div>
+    </div>
+
+    <!-- HOTEL TYPE & BRAND -->
+    <div class="hotel-section">
+      <div class="field-label">Hotel type</div>
+      <div class="pill-scroll" id="hotelTypePills">
+        <button class="pill active" onclick="selectPill(this,'hotelType')">Any</button>
+        <button class="pill" onclick="selectPill(this,'hotelType')">Boutique</button>
+        <button class="pill" onclick="selectPill(this,'hotelType')">Resort</button>
+        <button class="pill" onclick="selectPill(this,'hotelType')">Business</button>
+        <button class="pill" onclick="selectPill(this,'hotelType')">Eco Lodge</button>
+        <button class="pill" onclick="selectPill(this,'hotelType')">Extended Stay</button>
+      </div>
+
+      <div class="brand-input-wrap" style="margin-top:14px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sage)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <input class="brand-input" type="text" placeholder="Preferred brand (e.g. Marriott, Hilton…)">
+        <span class="optional-tag">Optional</span>
+      </div>
+    </div>
+
+    <!-- SEARCH BUTTON -->
+    <div class="search-btn-wrap">
+      <button class="search-btn" id="searchBtn" onclick="triggerSearch()">
+        <div class="btn-icon">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+        </div>
+        <span class="btn-text">Find my hotels</span>
+      </button>
+    </div>
+
+  </div><!-- /search-card -->
+  <div class="safe-bottom"></div>
+</div>
+
+<!-- DATE PICKER MODAL -->
+<div class="modal-overlay" id="dateModal" onclick="closeDateModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">Select check-in</div>
+    <div class="cal-month-nav">
+      <button class="cal-nav-btn" onclick="changeMonth(-1)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span id="calMonthLabel"></span>
+      <button class="cal-nav-btn" onclick="changeMonth(1)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div class="calendar-grid" id="calGrid">
+      <div class="cal-day-name">Su</div>
+      <div class="cal-day-name">Mo</div>
+      <div class="cal-day-name">Tu</div>
+      <div class="cal-day-name">We</div>
+      <div class="cal-day-name">Th</div>
+      <div class="cal-day-name">Fr</div>
+      <div class="cal-day-name">Sa</div>
+    </div>
+    <button class="modal-confirm" onclick="confirmDates()">Confirm dates</button>
+  </div>
+</div>
+
+<script>
+  // ── State ──
+  const state = {
+    rooms: 1, guests: 2,
+    checkin: null, checkout: null,
+    budget: 350,
+    calYear: new Date().getFullYear(),
+    calMonth: new Date().getMonth(),
+    dateMode: 'check-in'
+  };
+
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // ── Steppers ──
+  function step(field, dir) {
+    const min = field === 'rooms' ? 1 : 1;
+    const max = field === 'rooms' ? 9 : 16;
+    state[field] = Math.min(max, Math.max(min, state[field] + dir));
+    document.getElementById(field + 'Val').textContent = state[field];
+  }
+
+  // ── Pills ──
+  function selectPill(el, group) {
+    const container = el.closest('.pill-scroll');
+    container.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // ── Budget ──
+  function updateBudget(val) {
+    state.budget = parseInt(val);
+    document.getElementById('budgetAmt').textContent = val;
+    const pct = ((val - 50) / (1000 - 50)) * 100;
+    document.getElementById('sliderFill').style.width = pct + '%';
+  }
+
+  // ── Date Picker ──
+  function openDatePicker(mode) {
+    state.dateMode = mode;
+    document.getElementById('modalTitle').textContent = mode === 'check-in' ? 'Select check-in' : 'Select check-out';
+    renderCalendar();
+    document.getElementById('dateModal').classList.add('open');
+  }
+
+  function closeDateModal(e) {
+    if (e.target === document.getElementById('dateModal')) {
+      document.getElementById('dateModal').classList.remove('open');
+    }
+  }
+
+  function changeMonth(dir) {
+    state.calMonth += dir;
+    if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+    if (state.calMonth < 0)  { state.calMonth = 11; state.calYear--; }
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    document.getElementById('calMonthLabel').textContent = months[state.calMonth] + ' ' + state.calYear;
+    const grid = document.getElementById('calGrid');
+    // remove day cells (keep 7 header cells)
+    while (grid.children.length > 7) grid.removeChild(grid.lastChild);
+
+    const first = new Date(state.calYear, state.calMonth, 1).getDay();
+    const days  = new Date(state.calYear, state.calMonth + 1, 0).getDate();
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    for (let i = 0; i < first; i++) {
+      const el = document.createElement('div');
+      el.className = 'cal-day';
+      grid.appendChild(el);
+    }
+
+    for (let d = 1; d <= days; d++) {
+      const el = document.createElement('div');
+      el.className = 'cal-day';
+      el.textContent = d;
+      const thisDate = new Date(state.calYear, state.calMonth, d);
+      if (thisDate < today) { el.style.opacity = '0.3'; el.style.pointerEvents = 'none'; }
+      if (thisDate.toDateString() === today.toDateString()) el.classList.add('today');
+      if (state.checkin && thisDate.toDateString() === state.checkin.toDateString()) el.classList.add('range-start');
+      if (state.checkout && thisDate.toDateString() === state.checkout.toDateString()) el.classList.add('range-end');
+      if (state.checkin && state.checkout && thisDate > state.checkin && thisDate < state.checkout) el.classList.add('in-range');
+      el.onclick = () => selectDay(thisDate);
+      grid.appendChild(el);
+    }
+  }
+
+  function selectDay(date) {
+    if (state.dateMode === 'check-in') {
+      state.checkin = date;
+      if (state.checkout && state.checkout <= date) state.checkout = null;
+    } else {
+      if (state.checkin && date <= state.checkin) return;
+      state.checkout = date;
+    }
+    renderCalendar();
+    updateDateDisplays();
+  }
+
+  function updateDateDisplays() {
+    const fmt = d => d ? d.toLocaleDateString('en-US', {month:'short', day:'numeric'}) : null;
+    const ci = document.getElementById('checkinDisplay');
+    const co = document.getElementById('checkoutDisplay');
+    if (state.checkin) { ci.textContent = fmt(state.checkin); ci.classList.remove('empty'); }
+    if (state.checkout) { co.textContent = fmt(state.checkout); co.classList.remove('empty'); }
+  }
+
+  function confirmDates() {
+    updateDateDisplays();
+    document.getElementById('dateModal').classList.remove('open');
+    // auto-open checkout if only checkin set
+    if (state.dateMode === 'check-in' && !state.checkout) {
+      setTimeout(() => openDatePicker('check-out'), 300);
+    }
+  }
+
+  // ── Search ──
+  function triggerSearch() {
+    const btn = document.getElementById('searchBtn');
+    btn.classList.add('loading');
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      // In production: navigate to results page
+      alert('🏨 Searching Sabre + AI report incoming!\n\nIn production this triggers the Claude agent.');
+    }, 2200);
+  }
+
+  // ── Init ──
+  updateBudget(350);
+</script>
+</body>
+</html>
