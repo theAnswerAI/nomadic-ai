@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Nomadic AI — Member Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:#1E2D3D; --navy-deep:#151F2B; --navy-mid:#2C3E50;
+    --navy-light:#344D63; --navy-border:#3A506B;
+    --steel:#A3C9DF; --steel-dark:#7AAEC8; --steel-pale:#C8DDE9;
+    --slate:#6C69AC; --slate-light:#8D8BC4;
+    --white:#FFFFFF; --off-white:#F0F4F8;
+    --muted:#7A92A8; --muted-dark:#4A6278;
+    --green:#4CAF82; --gold:#E8B84B; --red:#E05252;
+    --radius-sm:10px; --radius-md:16px; --radius-lg:22px; --radius-xl:30px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family:'DM Sans',sans-serif; background:var(--navy-deep);
+    color:var(--white); min-height:100vh; overflow-x:hidden;
+  }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image:radial-gradient(circle,rgba(163,201,223,0.05) 1px,transparent 1px);
+    background-size:28px 28px; pointer-events:none; z-index:0;
+  }
+  .app { position:relative; z-index:1; max-width:430px; margin:0 auto; padding-bottom:100px; }
+
+  /* TOP BAR */
+  .topbar {
+    display:flex; align-items:center; gap:12px;
+    padding:54px 18px 18px;
+    opacity:0; animation:fadeUp 0.4s ease forwards;
+  }
+  .back-btn {
+    width:36px; height:36px; border-radius:10px;
+    background:var(--navy-mid); border:1px solid var(--navy-border);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--steel); flex-shrink:0;
+  }
+  .topbar-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; color:var(--white); flex:1; }
+  .settings-btn {
+    width:36px; height:36px; border-radius:10px;
+    background:var(--navy-mid); border:1px solid var(--navy-border);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--steel);
+  }
+
+  /* PROFILE HERO */
+  .profile-hero {
+    margin:0 14px 16px;
+    background:linear-gradient(135deg,rgba(44,62,80,0.9),rgba(108,105,172,0.3));
+    border:1px solid var(--navy-border); border-radius:var(--radius-xl);
+    padding:24px 20px; position:relative; overflow:hidden;
+    opacity:0; animation:fadeUp 0.4s ease 0.08s forwards;
+  }
+  .profile-hero::before {
+    content:''; position:absolute; top:-40px; right:-40px;
+    width:160px; height:160px; border-radius:50%;
+    background:radial-gradient(circle,rgba(163,201,223,0.1),transparent 70%);
+  }
+  .profile-row { display:flex; align-items:center; gap:16px; }
+  .profile-avatar {
+    width:64px; height:64px; border-radius:18px; flex-shrink:0;
+    background:linear-gradient(135deg,var(--steel-dark),var(--slate));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-size:24px; font-weight:700; color:var(--white);
+    border:2px solid rgba(163,201,223,0.3);
+  }
+  .profile-info { flex:1; }
+  .profile-name { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; color:var(--white); }
+  .profile-email { font-size:13px; color:var(--muted); font-weight:300; margin-top:2px; }
+  .profile-tier {
+    display:inline-flex; align-items:center; gap:5px;
+    margin-top:8px; padding:4px 12px; border-radius:100px;
+    background:rgba(232,184,75,0.15); border:1px solid rgba(232,184,75,0.3);
+  }
+  .profile-tier span { font-size:11px; font-weight:600; color:var(--gold); letter-spacing:0.06em; text-transform:uppercase; }
+  .profile-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:18px; }
+  .stat-item { text-align:center; }
+  .stat-val { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; color:var(--white); }
+  .stat-label { font-size:11px; color:var(--muted); font-weight:300; margin-top:2px; }
+  .stat-divider { width:1px; background:var(--navy-border); }
+
+  /* SECTION */
+  .section {
+    margin:0 14px 12px;
+    opacity:0; animation:fadeUp 0.4s ease forwards;
+  }
+  .section-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .section-title {
+    font-size:9px; font-weight:500; letter-spacing:0.18em;
+    text-transform:uppercase; color:var(--steel);
+    display:flex; align-items:center; gap:6px;
+  }
+  .section-title::before { content:''; width:3px; height:3px; border-radius:50%; background:var(--steel); }
+  .section-action { font-size:12px; color:var(--steel-dark); cursor:pointer; font-weight:500; }
+
+  /* CARD CONTAINER */
+  .card {
+    background:var(--navy-mid); border:1px solid var(--navy-border);
+    border-radius:var(--radius-lg); overflow:hidden;
+  }
+
+  /* REWARDS */
+  .reward-item {
+    display:flex; align-items:center; gap:14px;
+    padding:14px 16px; border-bottom:1px solid var(--navy-border); cursor:pointer;
+    transition:background 0.15s;
+  }
+  .reward-item:last-child { border-bottom:none; }
+  .reward-item:active { background:var(--navy-light); }
+  .reward-logo {
+    width:42px; height:42px; border-radius:12px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; border:1px solid var(--navy-border);
+  }
+  .reward-info { flex:1; }
+  .reward-program { font-family:'Syne',sans-serif; font-size:14px; font-weight:600; color:var(--white); }
+  .reward-number { font-size:12px; color:var(--muted); font-weight:300; margin-top:2px; font-family:'DM Sans',sans-serif; letter-spacing:0.04em; }
+  .reward-points-wrap { text-align:right; }
+  .reward-points { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--steel); }
+  .reward-pts-label { font-size:10px; color:var(--muted); }
+  .reward-progress { margin-top:6px; }
+  .reward-progress-bar { height:3px; background:var(--navy-deep); border-radius:2px; margin-top:3px; }
+  .reward-progress-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,var(--slate),var(--steel)); }
+  .reward-progress-label { font-size:10px; color:var(--muted); font-weight:300; }
+
+  .add-rewards-btn {
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:14px; cursor:pointer; color:var(--steel);
+    font-size:13px; font-weight:500; border-top:1px solid var(--navy-border);
+    transition:background 0.15s; background:none; border-left:none; border-right:none; border-bottom:none;
+    width:100%;
+  }
+  .add-rewards-btn:active { background:var(--navy-light); }
+
+  /* PAYMENT METHODS */
+  .payment-item {
+    display:flex; align-items:center; gap:14px;
+    padding:14px 16px; border-bottom:1px solid var(--navy-border); cursor:pointer;
+    transition:background 0.15s;
+  }
+  .payment-item:last-child { border-bottom:none; }
+  .payment-item:active { background:var(--navy-light); }
+  .card-icon {
+    width:46px; height:30px; border-radius:6px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; letter-spacing:0.04em;
+    border:1px solid var(--navy-border);
+  }
+  .card-visa { background:linear-gradient(135deg,#1a1f71,#2563eb); color:#fff; }
+  .card-mc { background:linear-gradient(135deg,#eb001b,#f79e1b); color:#fff; }
+  .card-amex { background:linear-gradient(135deg,#007bc1,#00b4d8); color:#fff; }
+  .payment-info { flex:1; }
+  .payment-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:600; color:var(--white); }
+  .payment-meta { font-size:12px; color:var(--muted); font-weight:300; margin-top:2px; }
+  .payment-default {
+    font-size:10px; font-weight:600; color:var(--green);
+    background:rgba(76,175,130,0.12); border:1px solid rgba(76,175,130,0.25);
+    border-radius:100px; padding:3px 9px; flex-shrink:0;
+  }
+  .payment-chevron { color:var(--muted); flex-shrink:0; }
+
+  .add-card-btn {
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:14px; cursor:pointer; color:var(--steel);
+    font-size:13px; font-weight:500; border-top:1px solid var(--navy-border);
+    background:none; border-left:none; border-right:none; border-bottom:none;
+    width:100%; transition:background 0.15s;
+  }
+  .add-card-btn:active { background:var(--navy-light); }
+
+  /* PREFERENCES */
+  .pref-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; border-bottom:1px solid var(--navy-border); cursor:pointer;
+    transition:background 0.15s;
+  }
+  .pref-item:last-child { border-bottom:none; }
+  .pref-item:active { background:var(--navy-light); }
+  .pref-left { display:flex; align-items:center; gap:12px; }
+  .pref-icon {
+    width:36px; height:36px; border-radius:10px; flex-shrink:0;
+    background:rgba(163,201,223,0.1); border:1px solid rgba(163,201,223,0.15);
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+  }
+  .pref-label { font-size:14px; color:var(--white); font-weight:400; }
+  .pref-value { font-size:12px; color:var(--muted); font-weight:300; margin-top:2px; }
+  .pref-right { display:flex; align-items:center; gap:8px; }
+  .pref-badge {
+    font-size:11px; font-weight:500; color:var(--steel);
+    background:rgba(163,201,223,0.1); border:1px solid rgba(163,201,223,0.2);
+    border-radius:6px; padding:3px 9px;
+  }
+
+  /* TOGGLE */
+  .toggle-track {
+    position:relative; width:44px; height:24px;
+    background:var(--navy-deep); border:1px solid var(--navy-border);
+    border-radius:12px; transition:background 0.2s; cursor:pointer; flex-shrink:0;
+  }
+  .toggle-track.on { background:var(--steel); border-color:var(--steel); }
+  .toggle-thumb {
+    position:absolute; top:3px; left:3px;
+    width:16px; height:16px; border-radius:50%;
+    background:var(--muted); transition:all 0.2s;
+  }
+  .toggle-track.on .toggle-thumb { left:23px; background:var(--navy-deep); }
+
+  /* BOOKING HISTORY */
+  .booking-item {
+    display:flex; align-items:center; gap:12px;
+    padding:14px 16px; border-bottom:1px solid var(--navy-border); cursor:pointer;
+    transition:background 0.15s;
+  }
+  .booking-item:last-child { border-bottom:none; }
+  .booking-item:active { background:var(--navy-light); }
+  .booking-emoji { font-size:28px; flex-shrink:0; width:48px; text-align:center; }
+  .booking-info { flex:1; }
+  .booking-hotel { font-family:'Syne',sans-serif; font-size:14px; font-weight:600; color:var(--white); }
+  .booking-dates { font-size:12px; color:var(--muted); font-weight:300; margin-top:2px; }
+  .booking-right { text-align:right; flex-shrink:0; }
+  .booking-amount { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--white); }
+  .booking-status {
+    font-size:10px; font-weight:600; text-transform:uppercase;
+    letter-spacing:0.06em; margin-top:3px;
+    padding:3px 8px; border-radius:100px; display:inline-block;
+  }
+  .status-upcoming { color:var(--steel); background:rgba(163,201,223,0.1); border:1px solid rgba(163,201,223,0.2); }
+  .status-completed { color:var(--green); background:rgba(76,175,130,0.1); border:1px solid rgba(76,175,130,0.2); }
+  .status-cancelled { color:var(--red); background:rgba(224,82,82,0.1); border:1px solid rgba(224,82,82,0.2); }
+
+  /* SIGN OUT */
+  .signout-btn {
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    margin:0 14px; padding:16px; border-radius:var(--radius-md);
+    background:none; border:1px solid rgba(224,82,82,0.3);
+    color:var(--red); font-family:'Syne',sans-serif; font-size:14px; font-weight:600;
+    cursor:pointer; transition:all 0.15s; width:calc(100% - 28px);
+    opacity:0; animation:fadeUp 0.4s ease 0.5s forwards;
+  }
+  .signout-btn:active { background:rgba(224,82,82,0.08); }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:430px;
+    background:rgba(21,31,43,0.96); backdrop-filter:blur(20px);
+    border-top:1px solid var(--navy-border);
+    padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));
+    z-index:40; display:flex;
+  }
+  .nav-item {
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+    cursor:pointer; padding:4px 0; transition:opacity 0.15s;
+  }
+  .nav-item svg { color:var(--muted); transition:color 0.15s; }
+  .nav-item span { font-size:10px; font-weight:500; color:var(--muted); letter-spacing:0.04em; }
+  .nav-item.active svg { color:var(--steel); }
+  .nav-item.active span { color:var(--steel); }
+
+  /* MODAL */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(15,20,28,0.8); z-index:100;
+    display:flex; align-items:flex-end; opacity:0; pointer-events:none;
+    transition:opacity 0.25s; backdrop-filter:blur(8px);
+  }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal-sheet {
+    width:100%; max-width:430px; margin:0 auto;
+    background:var(--navy-mid); border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+    border:1px solid var(--navy-border); border-bottom:none;
+    padding:12px 22px 40px;
+    transform:translateY(100%); transition:transform 0.32s cubic-bezier(0.32,0.72,0,1);
+  }
+  .modal-overlay.open .modal-sheet { transform:translateY(0); }
+  .modal-handle { width:36px; height:4px; border-radius:2px; background:var(--navy-border); margin:0 auto 18px; }
+  .modal-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; color:var(--white); margin-bottom:18px; }
+
+  .form-field { margin-bottom:14px; }
+  .form-label { font-size:10px; font-weight:500; letter-spacing:0.14em; text-transform:uppercase; color:var(--steel); margin-bottom:7px; display:block; }
+  .form-input {
+    width:100%; padding:13px 14px; border-radius:var(--radius-sm);
+    background:var(--navy-deep); border:1px solid var(--navy-border);
+    color:var(--white); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:300;
+    outline:none; transition:border-color 0.2s;
+  }
+  .form-input:focus { border-color:var(--steel-dark); box-shadow:0 0 0 3px rgba(163,201,223,0.08); }
+  .form-input::placeholder { color:var(--muted-dark); }
+  .modal-save-btn {
+    width:100%; margin-top:6px; padding:15px; border-radius:var(--radius-md);
+    background:var(--steel); border:none; color:var(--navy-deep);
+    font-family:'Syne',sans-serif; font-size:14px; font-weight:700;
+    cursor:pointer; letter-spacing:0.04em; transition:opacity 0.15s;
+  }
+  .modal-save-btn:active { opacity:0.85; }
+
+  /* Stripe-style card input */
+  .card-input-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);} }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="back-btn" onclick="history.back()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </div>
+    <div class="topbar-title">My Profile</div>
+    <div class="settings-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </div>
+  </div>
+
+  <!-- PROFILE HERO -->
+  <div class="profile-hero">
+    <div class="profile-row">
+      <div class="profile-avatar">J</div>
+      <div class="profile-info">
+        <div class="profile-name">James Carter</div>
+        <div class="profile-email">james@theanswer.ai</div>
+        <div class="profile-tier">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="var(--gold)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Gold Member</span>
+        </div>
+      </div>
+    </div>
+    <div class="profile-stats">
+      <div class="stat-item">
+        <div class="stat-val">12</div>
+        <div class="stat-label">Trips booked</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-val">48K</div>
+        <div class="stat-label">Total points</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-val">$4.2K</div>
+        <div class="stat-label">Total saved</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REWARDS -->
+  <div class="section" style="animation-delay:0.15s">
+    <div class="section-header">
+      <div class="section-title">Rewards Programs</div>
+      <div class="section-action" onclick="openModal('rewards')">+ Add</div>
+    </div>
+    <div class="card">
+      <div class="reward-item" onclick="openModal('rewards')">
+        <div class="reward-logo" style="background:rgba(0,100,192,0.15);">🔵</div>
+        <div class="reward-info">
+          <div class="reward-program">Hilton Honors</div>
+          <div class="reward-number">••••  ••••  7823</div>
+          <div class="reward-progress">
+            <div class="reward-progress-label">4,200 pts to Diamond status</div>
+            <div class="reward-progress-bar"><div class="reward-progress-fill" style="width:82%"></div></div>
+          </div>
+        </div>
+        <div class="reward-points-wrap">
+          <div class="reward-points">24,100</div>
+          <div class="reward-pts-label">points</div>
+        </div>
+      </div>
+      <div class="reward-item" onclick="openModal('rewards')">
+        <div class="reward-logo" style="background:rgba(192,0,0,0.15);">🔴</div>
+        <div class="reward-info">
+          <div class="reward-program">Marriott Bonvoy</div>
+          <div class="reward-number">••••  ••••  4491</div>
+          <div class="reward-progress">
+            <div class="reward-progress-label">11,800 pts to Platinum</div>
+            <div class="reward-progress-bar"><div class="reward-progress-fill" style="width:55%"></div></div>
+          </div>
+        </div>
+        <div class="reward-points-wrap">
+          <div class="reward-points">18,350</div>
+          <div class="reward-pts-label">points</div>
+        </div>
+      </div>
+      <div class="reward-item" onclick="openModal('rewards')">
+        <div class="reward-logo" style="background:rgba(0,160,100,0.15);">🟢</div>
+        <div class="reward-info">
+          <div class="reward-program">IHG One Rewards</div>
+          <div class="reward-number">••••  ••••  2209</div>
+          <div class="reward-progress">
+            <div class="reward-progress-label">600 pts to free night 🎉</div>
+            <div class="reward-progress-bar"><div class="reward-progress-fill" style="width:94%"></div></div>
+          </div>
+        </div>
+        <div class="reward-points-wrap">
+          <div class="reward-points">5,900</div>
+          <div class="reward-pts-label">points</div>
+        </div>
+      </div>
+      <button class="add-rewards-btn" onclick="openModal('rewards')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Add rewards program
+      </button>
+    </div>
+  </div>
+
+  <!-- PAYMENT METHODS -->
+  <div class="section" style="animation-delay:0.22s">
+    <div class="section-header">
+      <div class="section-title">Payment Methods</div>
+      <div class="section-action" onclick="openModal('payment')">+ Add</div>
+    </div>
+    <div class="card">
+      <div class="payment-item">
+        <div class="card-icon card-visa">VISA</div>
+        <div class="payment-info">
+          <div class="payment-name">Visa Infinite</div>
+          <div class="payment-meta">•••• •••• •••• 4821 · Exp 09/27</div>
+        </div>
+        <div class="payment-default">Default</div>
+      </div>
+      <div class="payment-item">
+        <div class="card-icon card-mc">MC</div>
+        <div class="payment-info">
+          <div class="payment-name">Mastercard Black</div>
+          <div class="payment-meta">•••• •••• •••• 9034 · Exp 03/26</div>
+        </div>
+        <svg class="payment-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="payment-item">
+        <div class="card-icon card-amex">AMEX</div>
+        <div class="payment-info">
+          <div class="payment-name">Amex Platinum</div>
+          <div class="payment-meta">•••• •••••• 72004 · Exp 11/28</div>
+        </div>
+        <svg class="payment-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <button class="add-card-btn" onclick="openModal('payment')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Add payment method
+      </button>
+    </div>
+  </div>
+
+  <!-- PREFERENCES -->
+  <div class="section" style="animation-delay:0.29s">
+    <div class="section-header">
+      <div class="section-title">Travel Preferences</div>
+      <div class="section-action" onclick="openModal('prefs')">Edit</div>
+    </div>
+    <div class="card">
+      <div class="pref-item" onclick="cyclePref(this,'bedType',['King','Queen','Twin','Double'])">
+        <div class="pref-left">
+          <div class="pref-icon">🛏️</div>
+          <div>
+            <div class="pref-label">Bed type</div>
+            <div class="pref-value">AI will prioritize this room type</div>
+          </div>
+        </div>
+        <div class="pref-right"><div class="pref-badge" id="pref-bedType">King</div></div>
+      </div>
+      <div class="pref-item" onclick="cyclePref(this,'floor',['High floor','Low floor','No preference'])">
+        <div class="pref-left">
+          <div class="pref-icon">🏢</div>
+          <div>
+            <div class="pref-label">Floor preference</div>
+            <div class="pref-value">For room assignment requests</div>
+          </div>
+        </div>
+        <div class="pref-right"><div class="pref-badge" id="pref-floor">High floor</div></div>
+      </div>
+      <div class="pref-item" onclick="togglePref('smoking')">
+        <div class="pref-left">
+          <div class="pref-icon">🚭</div>
+          <div>
+            <div class="pref-label">Non-smoking rooms</div>
+            <div class="pref-value">Always filter to non-smoking</div>
+          </div>
+        </div>
+        <div class="pref-right">
+          <div class="toggle-track on" id="toggle-smoking"><div class="toggle-thumb"></div></div>
+        </div>
+      </div>
+      <div class="pref-item" onclick="togglePref('loyalty')">
+        <div class="pref-left">
+          <div class="pref-icon">⭐</div>
+          <div>
+            <div class="pref-label">Prioritize loyalty hotels</div>
+            <div class="pref-value">Rank hotels where you earn points higher</div>
+          </div>
+        </div>
+        <div class="pref-right">
+          <div class="toggle-track on" id="toggle-loyalty"><div class="toggle-thumb"></div></div>
+        </div>
+      </div>
+      <div class="pref-item" onclick="cyclePref(this,'accessibility',['Not required','Accessible room','Roll-in shower','Visual aids'])">
+        <div class="pref-left">
+          <div class="pref-icon">♿</div>
+          <div>
+            <div class="pref-label">Accessibility needs</div>
+            <div class="pref-value">Passed to hotel at booking</div>
+          </div>
+        </div>
+        <div class="pref-right"><div class="pref-badge" id="pref-accessibility">Not required</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKING HISTORY -->
+  <div class="section" style="animation-delay:0.36s">
+    <div class="section-header">
+      <div class="section-title">Booking History</div>
+      <div class="section-action">View all</div>
+    </div>
+    <div class="card">
+      <div class="booking-item">
+        <div class="booking-emoji">🌴</div>
+        <div class="booking-info">
+          <div class="booking-hotel">The Nautilus South Beach</div>
+          <div class="booking-dates">Miami · Jun 14 – Jun 18, 2025</div>
+        </div>
+        <div class="booking-right">
+          <div class="booking-amount">$1,156</div>
+          <div class="booking-status status-upcoming">Upcoming</div>
+        </div>
+      </div>
+      <div class="booking-item">
+        <div class="booking-emoji">🗼</div>
+        <div class="booking-info">
+          <div class="booking-hotel">Hôtel Le Marais</div>
+          <div class="booking-dates">Paris · Mar 2 – Mar 7, 2025</div>
+        </div>
+        <div class="booking-right">
+          <div class="booking-amount">$2,340</div>
+          <div class="booking-status status-completed">Completed</div>
+        </div>
+      </div>
+      <div class="booking-item">
+        <div class="booking-emoji">🏙️</div>
+        <div class="booking-info">
+          <div class="booking-hotel">The LINE Hotel Austin</div>
+          <div class="booking-dates">Austin · Jan 18 – Jan 21, 2025</div>
+        </div>
+        <div class="booking-right">
+          <div class="booking-amount">$687</div>
+          <div class="booking-status status-completed">Completed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+  <div class="section" style="animation-delay:0.40s">
+    <div class="section-header">
+      <div class="section-title">Subscription</div>
+    </div>
+    <div class="card" style="padding:16px 16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--white)">Nomadic Pro</div>
+          <div style="font-size:12px;color:var(--muted);font-weight:300;margin-top:2px">Unlimited searches · Full AI reports · Priority booking</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--steel)">$19</div>
+          <div style="font-size:10px;color:var(--muted)">/month</div>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--navy-border);margin:14px 0"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:12px;color:var(--muted)">Renews Jan 15, 2026</div>
+        <div style="font-size:12px;color:var(--red);cursor:pointer">Cancel plan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGN OUT -->
+  <button class="signout-btn" onclick="alert('Signing out...')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Sign out
+  </button>
+
+</div><!-- /app -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item" onclick="alert('Search')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <span>Search</span>
+  </div>
+  <div class="nav-item" onclick="alert('Trips')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+    <span>Trips</span>
+  </div>
+  <div class="nav-item" onclick="alert('Saved')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    <span>Saved</span>
+  </div>
+  <div class="nav-item active">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Profile</span>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="addModal" onclick="closeAddModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">Add Rewards Program</div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+  const prefCycles = {};
+
+  function cyclePref(el, key, options) {
+    if (!prefCycles[key]) prefCycles[key] = 0;
+    prefCycles[key] = (prefCycles[key] + 1) % options.length;
+    document.getElementById('pref-' + key).textContent = options[prefCycles[key]];
+  }
+
+  function togglePref(key) {
+    const t = document.getElementById('toggle-' + key);
+    t.classList.toggle('on');
+  }
+
+  function openModal(type) {
+    const modal = document.getElementById('addModal');
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+
+    if (type === 'rewards') {
+      title.textContent = 'Add Rewards Program';
+      body.innerHTML = `
+        <div class="form-field">
+          <label class="form-label">Program</label>
+          <select class="form-input" style="cursor:pointer">
+            <option>Hilton Honors</option><option>Marriott Bonvoy</option>
+            <option>IHG One Rewards</option><option>World of Hyatt</option>
+            <option>Wyndham Rewards</option><option>Choice Privileges</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Member Number</label>
+          <input class="form-input" type="text" placeholder="Enter your member number">
+        </div>
+        <button class="modal-save-btn" onclick="saveAndClose()">Save rewards program</button>
+      `;
+    } else if (type === 'payment') {
+      title.textContent = 'Add Payment Method';
+      body.innerHTML = `
+        <div class="form-field">
+          <label class="form-label">Card Number</label>
+          <input class="form-input" type="text" placeholder="1234 5678 9012 3456" maxlength="19">
+        </div>
+        <div class="card-input-grid">
+          <div class="form-field">
+            <label class="form-label">Expiry</label>
+            <input class="form-input" type="text" placeholder="MM / YY" maxlength="7">
+          </div>
+          <div class="form-field">
+            <label class="form-label">CVC</label>
+            <input class="form-input" type="text" placeholder="•••" maxlength="4">
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Name on card</label>
+          <input class="form-input" type="text" placeholder="James Carter">
+        </div>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:14px">🔒 Secured by Stripe · Your card is never stored on our servers</div>
+        <button class="modal-save-btn" onclick="saveAndClose()">Add card securely</button>
+      `;
+    } else if (type === 'prefs') {
+      title.textContent = 'Edit Preferences';
+      body.innerHTML = `
+        <div class="form-field">
+          <label class="form-label">Home Airport</label>
+          <input class="form-input" type="text" placeholder="e.g. BWI, DCA, IAD" value="BWI">
+        </div>
+        <div class="form-field">
+          <label class="form-label">Default Currency</label>
+          <select class="form-input"><option>USD — US Dollar</option><option>EUR — Euro</option><option>GBP — British Pound</option></select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Dietary requirements</label>
+          <input class="form-input" type="text" placeholder="e.g. Vegetarian, Gluten-free">
+        </div>
+        <button class="modal-save-btn" onclick="saveAndClose()">Save preferences</button>
+      `;
+    }
+    modal.classList.add('open');
+  }
+
+  function closeAddModal(e) {
+    if (e.target === document.getElementById('addModal')) document.getElementById('addModal').classList.remove('open');
+  }
+
+  function saveAndClose() {
+    document.getElementById('addModal').classList.remove('open');
+  }
+</script>
+</body>
+</html>
